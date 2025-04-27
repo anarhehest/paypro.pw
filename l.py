@@ -12,6 +12,6 @@ l = {
 
 l.update({
     'auth': {
-        'key': lambda m,q,c,t,k: l['hash']['message']('\n'.join([m, l['hash']['query'](q),c,t]),k).decode()
+        'key': lambda m,q,c,t,k: l['hash']['message']('\n'.join([m, l['hash']['query'](q),c,t]),k).decode(),
     }
 })

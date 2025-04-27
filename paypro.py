@@ -7,7 +7,8 @@ URL = "https://api.paypro.pw"
 
 p = lambda v,k=URL: f'{k}{v}' 
 
-def request(f, **kw) -> HTTPResponse:
+
+def _request(f, **kw) -> HTTPResponse:
     try:
         d = kw.pop('payload')
     except KeyError:
@@ -24,3 +25,17 @@ def request(f, **kw) -> HTTPResponse:
     print('<', resp.status, '\n<', resp.read().decode())
     
     return resp
+
+
+def request(f, **kw):
+    m, _p, kw = f(**kw)
+
+    print('>', m, '\n>', m.__name__, p(_p))
+    if not 'payload' in kw.keys():
+        kw.update({ 'payload': dict() })
+
+    r = m(p(_p), headers=keygen(kw['payload'], m, kw['keys']))
+    print('<', r.content.decode())
+    return r
+
+

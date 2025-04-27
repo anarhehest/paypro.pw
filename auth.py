@@ -1,5 +1,4 @@
 import time
-from typing import Dict, Tuple, List, Union
 
 from l import l
 
@@ -30,19 +29,16 @@ def generate_key(query:dict, date:str, post:bool) -> str:
     return 'PPS ' + public_key + ':' + signature
 """
 
-def keygen(query:dict, post:bool, keys:Union[Tuple[str], List[str], Dict[str, str]]) -> str:
-    
-    if isinstance(keys, tuple):
-        key, _key = keys[0], keys[1]
-    elif isinstance(keys, list):
-        _key = keys.pop()
-        key = keys.pop()
-    elif isinstance(keys, dict):
-        key, _key = keys.pop('PUBLIC_KEY'), keys.pop('PRIVATE_KEY')
+def keygen(query:dict, method:callable, keys:dict[str,str]) -> str:
 
-    t = str(int(time.time()))
-    if post:
-        m, ct = 'post', 'application/json'
-    else:
-        m, ct = 'get', str()
-    return { 'Auth': f"PPS {key}:{l['auth']['key'](m,query,ct,t,_key)}", 'X-PPS-Time': t}
+    match method.__name__:
+        case 'get':
+            m, ct = 'get', str()
+        case 'post', _:
+            m, ct = 'post', 'application/json'
+            
+    t = str(int(time.time()))    
+    return {
+        'Auth': f"PPS {keys['PUBLIC_KEY']}:{l['auth']['key'](m,query,ct,t,keys['PRIVATE_KEY'])}",
+        'X-PPS-Time': t
+    }

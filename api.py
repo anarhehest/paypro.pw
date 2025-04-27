@@ -1,17 +1,20 @@
+from requests import get, patch, post
+
 global api
 
 p = lambda v,k='merchant': f'/{k}/{v}'
+r = lambda m,v,kw: (m, p(v), kw)
 
 api = {
-    'account': { 'info': lambda **kw: ('GET', p('account-info'), kw) },
+    'account': { 'info': lambda **kw: r(get, 'account-info', kw) },
     'deposit': {
-        'pre': lambda **kw: ('GET', p('pre-deposit'), kw),
-        'get-address': lambda **kw: ('POST', p('get-address'), kw),
-        'make': lambda **kw: ('POST', p('deposit'), kw),
+        'pre': lambda **kw: r(get, 'pre-deposit', kw),
+        'get-address': lambda **kw: r(post, 'get-address', kw),
+        'make': lambda **kw: r(post, 'deposit', kw),
     },
     'withdraw': {
-        'pre': lambda **kw: ('GET', p('pre-withdraw'), kw),
-        'make': lambda **kw: ('POST', p('withdraw'), kw),
+        'pre': lambda **kw: r(get, 'pre-withdraw', kw),
+        'make': lambda **kw: r(post, 'withdraw', kw),
     }
 }
 
@@ -22,13 +25,13 @@ def keys_transfer(**kw):
     for x in 'code', 'keys':
         if not x in kw['payment_systems']:
             raise ValueError(f'Variable {x} is required')
-    return 'POST', p('keys-transfer'), kw
+    return r(post, 'keys-transfer', kw)
 
 
 api.update({
     'payment_systems': {
         'keys_transfer': lambda **kw: keys_transfer(**kw),
-        'api_info': lambda **kw: ('GET', p('api-info'), kw),
+        'api_info': lambda **kw: r(get, 'api-info', kw),
     }
 })
 
@@ -38,13 +41,13 @@ def transaction_status(**kw):
         _p = p(f"/merchant-transaction-status/{kw.pop('id')}")
     except KeyError:
         raise ValueError(f'Transaction ID is required')
-    return 'GET', _p, kw
+    return get, _p, kw
 
 
 api['payment_systems'].update({
     'transaction_status': lambda **kw: transaction_status(**kw),
-    'transactions': lambda **kw: ('GET', p('transactions'), kw),
-    'transaction_log': lambda **kw: ('GET', p('transaction-log'), kw),
+    'transactions': lambda **kw: r(get, 'transactions', kw),
+    'transaction_log': lambda **kw: r(get, 'transaction-log', kw),
 })
 
 
@@ -53,11 +56,12 @@ def settings(**kw):
         _p = p(f"/merchant-transaction-status/{kw.pop('settings')}")
     except KeyError:
         raise ValueError(f'Payment system code is required')
-    return 'GET', _p, kw
+    return get, _p, kw
+
 
 api['payment_systems'].update({
     'info': lambda **kw: settings(**kw),
-    'payment_systems': lambda **kw: ('GET', p('payment-systems'), kw),
+    'payment_systems': lambda **kw: r(get, 'payment-systems', kw),
 })
 
 
@@ -66,12 +70,18 @@ def check_balance(**kw):
         _p = p(f"/check-balance/{kw.pop('code')}")
     except KeyError:
         raise ValueError(f'Payment system code is required')
-    return 'GET', _p, kw
+    return get, _p, kw
+
 
 api['payment_systems'].update({
     'check_balance': lambda **kw: check_balance(**kw),
-    'methods': lambda **kw: ('GET', p('payment-methods-list'), kw),
-    'method_settings': lambda **kw: ('PATCH', p('payment-methods-settings'), kw)
+    'methods': lambda **kw: r(get, 'payment-methods-list', kw),
+    'method_settings': lambda **kw: r(patch, 'payment-methods-settings', kw)
 })
 
-api['ps'] = api['payment_systems']
+api = {
+    'a': api['account'],
+    'd': api['deposit'],
+    'p': api['payment_systems'],
+    'w': api['withdraw'],
+}
