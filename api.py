@@ -79,9 +79,9 @@ api['payment_systems'].update({
     'method_settings': lambda **kw: r(patch, 'payment-methods-settings', kw)
 })
 
-api = {
+api.update({
     'a': api['account'],
     'd': api['deposit'],
     'p': api['payment_systems'],
     'w': api['withdraw'],
-}
+})
